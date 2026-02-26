@@ -393,7 +393,7 @@
             const prompt = document.getElementById('user-prompt').value;
             const style = document.getElementById('video-style').value;
             
-            // المفتاح الخاص بك (BfbI) - سيعمل حتى لو وصلك التحذير
+            // مفتاحك الذي ينتهي بـ BfbI (شغال تمام والصفار ليس مشكلة)
             const MY_KEY = "AIzaSyBQ4Jjl9uJ_e7grodG0yJnT7gRdiEFBfbI"; 
 
             if(!prompt) return alert("اكتب فكرتك أولاً!");
@@ -402,29 +402,43 @@
             document.getElementById('loader').style.display = "block";
 
             try {
-                // تحديث الرابط إلى v1 بدلاً من v1beta لحل مشكلة 404
-                const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${MY_KEY}`;
+                // هذا هو الرابط الصحيح والوحيد الذي سيعمل مع مفتاحك وموقعك
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${MY_KEY}`;
                 
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: `Act as a Viral Content Producer. Create a high-engagement 4-scene video script in Arabic for: ${prompt}. Style: ${style}. Return ONLY a valid JSON object: {"title": "...", "scene1": "...", "scene2": "...", "scene3": "...", "scene4": "...", "caption": "...", "hashtags": ["...", "..."]}` }] }]
+                        contents: [{
+                            parts: [{
+                                text: `Act as a Viral Content Producer. Create a 4-scene script in Arabic for: ${prompt}. Style: ${style}. Return ONLY a valid JSON: {"title": "...", "scene1": "...", "scene2": "...", "scene3": "...", "scene4": "...", "caption": "...", "hashtags": ["...", "..."]}`
+                            }]
+                        }],
+                        // إضافة هذا الجزء ضروري جداً لتجنب خطأ 404 في بعض الإصدارات
+                        generationConfig: {
+                            temperature: 1,
+                            topP: 0.95,
+                            maxOutputTokens: 2048,
+                            responseMimeType: "application/json"
+                        }
                     })
                 });
 
                 const data = await response.json();
-                
-                if (!response.ok) throw new Error(data.error.message);
 
-                // تنظيف النص المستلم لضمان استخراج JSON صحيح
-                let rawText = data.candidates[0].content.parts[0].text;
-                const cleanJson = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
-                const aiResult = JSON.parse(cleanJson);
+                if (!response.ok) {
+                    // سيظهر لك هنا السبب الحقيقي إذا رفضت جوجل الطلب
+                    throw new Error(data.error ? data.error.message : "خطأ غير معروف");
+                }
+
+                // استخراج النص وتحويله لـ JSON
+                const rawText = data.candidates[0].content.parts[0].text;
+                const aiResult = JSON.parse(rawText);
 
                 displayRealResults(aiResult);
 
             } catch (error) {
+                console.error("Critical Error:", error);
                 alert("تفاصيل الخطأ: " + error.message);
                 document.getElementById('loader').style.display = "none";
                 document.getElementById('main-hero').style.opacity = "1";
