@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Video Engine | Turn Ideas into Viral Content</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #007AFF;
+            --secondary: #6366f1;
+            --accent: #a855f7;
+            --bg-dark: #050505;
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --text-main: #ffffff;
+            --text-dim: #b3b3b3;
+            --glow: 0 0 20px rgba(0, 122, 255, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Background Animation */
+        .bg-stars {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #050505 100%);
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .bg-stars::after {
+            content: "";
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+            opacity: 0.3;
+            animation: moveStars 100s linear infinite;
+        }
+
+        @keyframes moveStars {
+            from { transform: translateY(0); }
+            to { transform: translateY(-50%); }
+        }
+
+        /* Navbar */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 8%;
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links a {
+            color: var(--text-dim);
+            text-decoration: none;
+            margin-right: 25px;
+            font-size: 0.9rem;
+            transition: 0.3s;
+        }
+
+        .nav-links a:hover { color: var(--primary); }
+
+        .btn-login {
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 8px 20px;
+            border-radius: 50px;
+            color: white;
+            cursor: pointer;
+        }
+
+        /* Hero Section */
+        .hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 100px 5% 50px;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 800;
+            margin-bottom: 10px;
+            letter-spacing: -2px;
+        }
+
+        .hero p {
+            color: var(--text-dim);
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+        }
+
+        /* Input Area */
+        .input-container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--bg-card);
+            padding: 15px;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: var(--glow);
+            backdrop-filter: blur(20px);
+        }
+
+        textarea {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: white;
+            font-size: 1.2rem;
+            padding: 15px;
+            resize: none;
+            height: 100px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            padding-top: 15px;
+        }
+
+        select {
+            background: #111;
+            color: white;
+            border: 1px solid #333;
+            padding: 10px 15px;
+            border-radius: 12px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .btn-generate {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 14px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 20px rgba(0, 122, 255, 0.3);
+        }
+
+        .btn-generate:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 30px rgba(0, 122, 255, 0.5);
+        }
+
+        /* Loader */
+        #loader {
+            display: none;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        #loading-text {
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        /* Result Section */
+        #result-section {
+            display: none;
+            width: 100%;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(40px);
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-title {
+            font-size: 2rem;
+            margin-bottom: 25px;
+            color: var(--primary);
+        }
+
+        .scene-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            margin-bottom: 15px;
+            padding: 20px;
+            border-radius: 15px;
+            border-right: 4px solid var(--secondary);
+            transition: 0.3s;
+        }
+
+        .scene-card:hover { background: rgba(255,255,255,0.08); }
+
+        .scene-tag {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .caption-box {
+            background: #000;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 30px;
+            position: relative;
+        }
+
+        .pills {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .pill {
+            background: rgba(168, 85, 247, 0.2);
+            color: var(--accent);
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 40px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-outline:hover { background: white; color: black; }
+
+        .btn-pro {
+            background: gold;
+            color: black;
+            font-weight: bold;
+        }
+
+        /* Footer Branding */
+        .branding {
+            text-align: center;
+            padding: 50px;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.8rem; }
+            nav { padding: 15px 5%; }
+            .nav-links { display: none; }
+            .controls { flex-direction: column; gap: 15px; }
+            .btn-generate { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-stars"></div>
+
+    <nav>
+        <div class="logo">AI Video Engine</div>
+        <div class="nav-links">
+            <a href="#">Pricing</a>
+            <a href="#">Dashboard</a>
+            <button class="btn-login">Login</button>
+        </div>
+    </nav>
+
+    <section class="hero" id="main-hero">
+        <h1>AI Video Engine</h1>
+        <p>Turn your idea into viral content in seconds.</p>
+
+        <div style="color: var(--text-dim); margin-bottom: 10px; font-size: 0.8rem;">
+            Free Credits: <span id="credits" style="color: var(--primary);">3</span>/3 left
+        </div>
+
+        <div class="input-container">
+            <textarea id="user-prompt" placeholder="Type your idea for a viral video..."></textarea>
+            <div class="controls">
+                <select id="video-style">
+                    <option value="TikTok">Viral TikTok</option>
+                    <option value="Dark">Dark Story</option>
+                    <option value="Motivation">Motivation</option>
+                    <option value="Facts">Facts</option>
+                    <option value="Documentary">Documentary</option>
+                </select>
+                <button class="btn-generate" onclick="startGeneration()">✨ Generate Magic</button>
+            </div>
+        </div>
+    </section>
+
+    <div id="loader">
+        <div class="spinner"></div>
+        <p id="loading-text">Analyzing your idea...</p>
+    </div>
+
+    <div id="result-section">
+        <h2 class="result-title" id="res-title">The Future of AI</h2>
+        
+        <div id="scenes-container">
+            </div>
+
+        <div class="caption-box">
+            <span class="scene-tag">Captions & Hashtags</span>
+            <p id="res-caption">The world is changing faster than we think... #AI #Future #Tech</p>
+            <div class="pills" id="res-pills">
+                <span class="pill">#Viral</span>
+                <span class="pill">#AI</span>
+                <span class="pill">#Innovation</span>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn-outline" onclick="location.reload()">🔄 Regenerate</button>
+            <button class="btn-outline">📋 Copy All</button>
+            <button class="btn-outline">🎙 Generate Voice (Soon)</button>
+            <button class="btn-outline btn-pro">🎥 Generate Full Video (Pro)</button>
+        </div>
+    </div>
+
+    <div class="branding">
+        Generated by AI Video Engine<br>
+        <small>ai-video-engine.com</small>
+    </div>
+
+    <script>
+        async function startGeneration() {
+            const prompt = document.getElementById('user-prompt').value;
+            const style = document.getElementById('video-style').value;
+            const MY_KEY = "AIzaSyBZPSrEF_W7RSwIhK1s4c_tpUqDKZjHgRk"; 
+
+            if(!prompt) {
+                alert("اكتب فكرتك أولاً يا بطل!");
+                return;
+            }
+
+            // تأثيرات بصرية عند البدء
+            document.getElementById('main-hero').style.opacity = "0.2";
+            document.getElementById('loader').style.display = "block";
+            document.getElementById('loading-text').innerText = "جاري تفعيل المعالج العصبي... ⚡";
+            
+            // الطلب النووي: تعليمات صارمة جداً لـ Gemini
+            const instruction = `Act as a Viral Content Producer. Create a high-engagement 4-scene video script in Arabic for: ${prompt}. Style: ${style}. 
+            Return ONLY a valid JSON object. DO NOT include any markdown or extra text. 
+            Structure: {"title": "...", "scene1": "...", "scene2": "...", "scene3": "...", "scene4": "...", "caption": "...", "hashtags": ["...", "..."]}`;
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${MY_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: instruction }] }],
+                        generationConfig: {
+                            temperature: 0.85, // درجة حرارة عالية لإبداع أكبر
+                            topP: 0.95,
+                            responseMimeType: "application/json" // إجبار الرد على أن يكون JSON
+                        }
+                    })
+                });
+
+                if (!response.ok) throw new Error('API Error');
+
+                const data = await response.json();
+                const rawText = data.candidates[0].content.parts[0].text;
+                
+                // تنظيف النص من أي شوائب برمجية (الحل المعجزة)
+                const cleanJson = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
+                const aiResult = JSON.parse(cleanJson);
+
+                displayRealResults(aiResult);
+
+            } catch (error) {
+                console.error("Critical Error:", error);
+                alert("فشل في الاتصال بالدماغ الاصطناعي! تأكد من أن المفتاح مفعل في Google AI Studio.");
+                document.getElementById('loader').style.display = "none";
+                document.getElementById('main-hero').style.opacity = "1";
+            }
+        }
+
+        // دالة العرض الخارقة مع الصور التلقائية
+        function displayRealResults(data) {
+            document.getElementById('main-hero').style.display = "none";
+            document.getElementById('loader').style.display = "none";
+            document.getElementById('result-section').style.display = "block";
+
+            document.getElementById('res-title').innerText = data.title;
+            document.getElementById('res-caption').innerText = data.caption;
+            
+            const pillsContainer = document.getElementById('res-pills');
+            pillsContainer.innerHTML = '';
+            data.hashtags.forEach(tag => {
+                pillsContainer.innerHTML += `<span class="pill">${tag.startsWith('#') ? tag : '#'+tag}</span>`;
+            });
+
+            const container = document.getElementById('scenes-container');
+            container.innerHTML = '';
+            
+            const scenes = [
+                {tag: "المشهد 1 - الافتتاحية", text: data.scene1},
+                {tag: "المشهد 2 - التطور", text: data.scene2},
+                {tag: "المشهد 3 - الذروة", text: data.scene3},
+                {tag: "المشهد 4 - النهاية", text: data.scene4}
+            ];
+
+            scenes.forEach((s, i) => {
+                setTimeout(() => {
+                    const div = document.createElement('div');
+                    div.className = 'scene-card';
+                    
+                    // محرك صور خارق ومجاني (يرسم بناءً على النص العربي) - نسخة 4K سينمائية
+                    const imageUrl = `https://pollinations.ai/p/${encodeURIComponent(s.text + " cinematic lighting, high resolution, 8k, detailed, masterpiece")}?width=1080&height=1920&seed=${Math.floor(Math.random() * 99999)}&nologo=true`;
+                    
+                    div.innerHTML = `
+                        <span class="scene-tag">${s.tag}</span>
+                        <p style="margin-bottom:15px; font-size: 1.1rem; color: #fff;">${s.text}</p>
+                        <div style="position:relative; width:100%; border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.1);">
+                            <img src="${imageUrl}" style="width:100%; display:block;" alt="AI Generated Scene">
+                            <div style="position:absolute; bottom:0; background:linear-gradient(transparent, rgba(0,0,0,0.8)); width:100%; padding:10px; font-size:0.8rem;">
+                                جاري توليد الصورة بذكاء اصطناعي...
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                }, i * 800);
+            });
+        }
+    </script>
+</body>
+</html>
